@@ -1,0 +1,124 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Easter Scavenger Hunt</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #faf7ff; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 18px; }
+    .card { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 6px 18px rgba(0,0,0,.08); }
+    h1 { font-size: 22px; margin: 0 0 6px; }
+    .sub { color: #555; margin: 0 0 10px; font-size: 14px; }
+    .clue { font-size: 18px; line-height: 1.35; white-space: pre-line; margin: 12px 0 16px; }
+    .row { display: flex; gap: 10px; }
+    input { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px; }
+    button { padding: 12px 14px; border-radius: 10px; border: 0; background: #6b4eff; color: #fff; font-size: 16px; }
+    .msg { margin-top: 12px; font-weight: 650; }
+    .small { color: #666; font-size: 13px; margin-top: 12px; line-height: 1.35; }
+    .progress { margin-top: 10px; color: #444; font-size: 13px; }
+    .footer { display:flex; justify-content:space-between; align-items:center; margin-top: 14px; }
+    .reset { background:#eee; color:#333; font-size: 13px; padding:10px 12px; border-radius:10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>🐣 Easter Scavenger Hunt</h1>
+      <p class="sub">Find the hidden code in each room to unlock the next clue.</p>
+
+      <div class="progress" id="progress"></div>
+      <div class="clue" id="clue"></div>
+
+      <div class="row">
+        <input id="code" placeholder="Enter the code you found" autocomplete="off" />
+        <button id="btn">Unlock</button>
+      </div>
+
+      <div class="msg" id="msg"></div>
+
+      <div class="footer">
+        <div class="small">Codes are not case-sensitive.</div>
+        <button class="reset" id="resetBtn">Reset</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const PRIZE_LOCATION = "PLACE YOUR PRIZE LOCATION HERE";
+
+  const steps = [
+    { clue:`Clue 1:\nI’m stuffed with books both old and new,\nQuiet and cozy—just for you.\nIf wisdom’s what you like to find,\nThis peaceful spot will come to mind.`,
+      hash:"a1b8845c9c80654d7d175e1ae29fa52368ec4075108a15afde5f69f0ae27a37d" },
+
+    { clue:`Clue 2:\nFrom stories read to work gets done,\nEmails, typing—sometimes fun.\nA desk, a chair, a focused face,\nHop along to this working space.`,
+      hash:"54f8008479af32438b88ed13b5d796f9970f64d0546289c05683b979b93ff797" },
+
+    { clue:`Clue 3:\nLights grow dim, the speakers boom,\nMovies come alive in this room.\nGrab some popcorn, take your seat,\nYour next surprise is hard to beat!`,
+      hash:"3517f05083e7d5eb29c3b1ab31f5e3074c2cb643477165e37f0b2880e60f413a" },
+
+    { clue:`Clue 4:\nWhere couches wait and folks relax,\nChatting, laughing—no need to tax.\nTV, comfort, family cheer,\nHop your way, the prize is near!`,
+      hash:"cd3c2c0e5a61e39bba819ce55c6c2a4ab94386d7a38b1168792326471e3ac39e" },
+
+    { clue:`Clue 5:\nI sizzle, simmer, bake, and brew,\nEaster treats are made here too.\nWith fridge and stove and snacks galore,\nSearch this room to find some more!`,
+      hash:"9fe5fb2b6957be7ea995ab8bff335e258af73d7875892d314bb074ce4d23c876" },
+
+    { clue:`Clue 6:\nA room that’s green, calm, and serene,\nA resting spot that’s rarely seen.\nTake a peek, don’t leave it bare—\nYour Easter clue is hiding there.`,
+      hash:"d78ee99220679c5ecb632e66ffaa2196f930c78b5411c214f9a0fea59c90f542" },
+
+    { clue:`Clue 7:\nWhere bubbles rise and water runs,\nMorning routines and bedtime funs.\nWash and dry, then look around,\nYour next big hint will soon be found.`,
+      hash:"697164d013816a276be7c3baaf3b8f128ab5cb550bf58a35751e69d6ba83ccf8" },
+
+    { clue:`🎉 Final Clue!\nWhere dreams begin and days unwind,\nAnd a vanity waits close behind.\nMirror, makeup, jewelry too—\nYour final Easter prize waits for you!`,
+      hash:"238b9b400e9c3396b2b173d248bce957256d4702d5fb798769fa79d34321bc2e" }
+  ];
+
+  const k = "easter_step";
+  let step = Number(localStorage.getItem(k)) || 0;
+
+  const clue = document.getElementById("clue");
+  const msg = document.getElementById("msg");
+  const prog = document.getElementById("progress");
+  const input = document.getElementById("code");
+
+  function render() {
+    prog.textContent = `Step ${step+1} of ${steps.length}`;
+    clue.textContent = steps[step].clue;
+    msg.textContent = "";
+    input.value = "";
+  }
+
+  async function sha256(t) {
+    const b = new TextEncoder().encode(t);
+    const h = await crypto.subtle.digest("SHA-256", b);
+    return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,"0")).join("");
+  }
+
+  document.getElementById("btn").onclick = async () => {
+    const val = input.value.trim().toUpperCase();
+    if (!val) return;
+    const h = await sha256(val);
+    if (h === steps[step].hash) {
+      if (step === steps.length-1) {
+        clue.textContent = `🏆 CONGRATULATIONS!\n\nYou finished the hunt!\n\nYour prize is located:\n${PRIZE_LOCATION}`;
+        prog.textContent = "Complete!";
+        msg.textContent = "";
+        return;
+      }
+      step++;
+      localStorage.setItem(k, step);
+      render();
+    } else {
+      msg.textContent = "❌ Incorrect code — search the room again!";
+    }
+  };
+
+  document.getElementById("resetBtn").onclick = () => {
+    localStorage.removeItem(k);
+    step = 0;
+    render();
+  };
+
+  render();
+</script>
+</body>
+</html>
